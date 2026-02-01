@@ -1,0 +1,26 @@
+<!doctype html>
+<html>
+  <head>
+    <title>Laptops - Catalog</title>
+  </head>
+  <body>
+    <h2>Laptops</h2>
+    <div id="list"></div>
+
+    <script>
+      fetch("/api/laptops")
+        .then((res) => res.json())
+        .then((data) => {
+          document.getElementById("list").innerHTML = data
+            .map(
+              (l) =>
+                `<div>
+        <b>${l.brand} ${l.model}</b> - $${l.price}
+        <a href="laptop.html?id=${l._id}">View</a>
+      </div>`,
+            )
+            .join("");
+        });
+    </script>
+  </body>
+</html>

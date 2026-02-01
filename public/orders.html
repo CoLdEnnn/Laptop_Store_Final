@@ -1,0 +1,19 @@
+<!doctype html>
+<html>
+  <body>
+    <h2>My Orders</h2>
+    <div id="orders"></div>
+
+    <script>
+      const userId = "PUT_USER_ID";
+
+      fetch(`/api/orders/user/${userId}`)
+        .then((res) => res.json())
+        .then((data) => {
+          document.getElementById("orders").innerHTML = data
+            .map((o) => `<p>${o.laptopId.brand} - ${o.status}</p>`)
+            .join("");
+        });
+    </script>
+  </body>
+</html>

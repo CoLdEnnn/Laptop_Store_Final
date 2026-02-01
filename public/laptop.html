@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+  <body>
+    <div id="laptop"></div>
+    <button onclick="buy()">Buy</button>
+
+    <script>
+      const id = new URLSearchParams(location.search).get("id");
+
+      fetch(`/api/laptops/${id}`)
+        .then((res) => res.json())
+        .then((l) => {
+          document.getElementById("laptop").innerHTML = `
+      <h2>${l.brand} ${l.model}</h2>
+      <p>Price: $${l.price}</p>
+      <p>Stock: ${l.stock}</p>
+    `;
+        });
+
+      function buy() {
+        fetch(`/api/laptops/purchase/${id}`, { method: "POST" }).then(() =>
+          alert("Purchased"),
+        );
+      }
+    </script>
+  </body>
+</html>
