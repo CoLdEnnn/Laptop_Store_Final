@@ -11,7 +11,7 @@
     <nav>
       <a href="laptops.html">Catalog</a>
       <a href="orders.html">My Orders</a>
-      <a href="login.html">Login</a>
+      <a id="loginLink" href="login.html">Login</a>
       <a id="adminLink" href="admin.html" style="display: none">Admin</a>
       <button id="logoutBtn" style="display: none">Logout</button>
     </nav>
@@ -20,10 +20,18 @@
       const role = localStorage.getItem("role");
       const token = localStorage.getItem("token");
 
-      if (token)
-        document.getElementById("logoutBtn").style.display = "inline-block";
-      if (role === "admin")
-        document.getElementById("adminLink").style.display = "inline-block";
+      const loginLink = document.getElementById("loginLink");
+      const logoutBtn = document.getElementById("logoutBtn");
+      const adminLink = document.getElementById("adminLink");
+
+      if (token) {
+        logoutBtn.style.display = "inline-block";
+        if (loginLink) loginLink.style.display = "none";
+      }
+
+      if (role === "admin") {
+        adminLink.style.display = "inline-block";
+      }
 
       document.getElementById("logoutBtn").onclick = () => {
         localStorage.removeItem("token");

@@ -8,7 +8,7 @@
   <body>
     <h2>Admin Panel</h2>
 
-    <p><a href="index.html">← Home</a></p>
+    <p><a href="index.html">Back</a></p>
 
     <h3>Add Laptop</h3>
     <input id="brand" placeholder="Brand" />
@@ -70,14 +70,39 @@
         document.getElementById("laptops").innerHTML = data
           .map(
             (l) => `
-            <div style="padding:8px;border:1px solid #ddd;margin:8px 0;">
+            <div class="card">
               <b>${l.brand} ${l.model}</b> - $${l.price} | stock: ${l.stock}
-              <button onclick="delLaptop('${l._id}')">Delete</button>
+              <div style="margin-top: 10px;">
+                <button onclick="editLaptop('${l._id}', '${l.brand}', '${l.model}', ${l.price}, ${l.stock})">Edit</button>
+                <button onclick="delLaptop('${l._id}')">Delete</button>
+              </div>
             </div>`,
           )
           .join("");
       }
+      async function editLaptop(id, oldBrand, oldModel, oldPrice, oldStock) {
+        const newPrice = prompt("Enter new price:", oldPrice);
+        const newStock = prompt("Enter new stock:", oldStock);
 
+        if (newPrice === null || newStock === null) return;
+
+        const res = await fetch("/api/laptops/" + id, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({
+            brand: oldBrand,
+            model: oldModel,
+            price: Number(newPrice),
+            stock: Number(newStock),
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Update failed");
+
+        alert("Updated");
+        loadLaptops();
+      }
       async function loadOrders() {
         const res = await fetch("/api/orders", { headers: authHeaders() });
         const data = await res.json();

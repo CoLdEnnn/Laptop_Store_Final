@@ -5,7 +5,6 @@ const { auth, isAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
-// 1) inventory by brand (по складу) - aggregation
 router.get("/inventory-by-brand", auth, isAdmin, async (req, res, next) => {
   try {
     const stats = await Laptop.aggregate([
@@ -27,7 +26,6 @@ router.get("/inventory-by-brand", auth, isAdmin, async (req, res, next) => {
   }
 });
 
-// 2) revenue by brand (из заказов) - multi-stage aggregation
 router.get("/revenue-by-brand", auth, isAdmin, async (req, res, next) => {
   try {
     const data = await Order.aggregate([

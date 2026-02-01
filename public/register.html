@@ -1,0 +1,58 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Register</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div class="container">
+      <nav>
+        <a href="index.html">Home</a>
+      </nav>
+
+      <div class="card">
+        <h2>Create Account</h2>
+        <div class="field">
+          <label>Name</label>
+          <input id="regName" placeholder="Full Name" />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input id="regEmail" placeholder="Email Address" />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input id="regPass" type="password" placeholder="Password" />
+        </div>
+        <div class="row">
+          <button onclick="doRegister()">Register</button>
+        </div>
+        <p>Already have an account? <a href="login.html">Login here</a></p>
+      </div>
+    </div>
+
+    <script>
+      async function doRegister() {
+        const name = document.getElementById("regName").value.trim();
+        const email = document.getElementById("regEmail").value.trim();
+        const password = document.getElementById("regPass").value;
+
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ name, email, password }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Register failed");
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.user.role);
+
+        alert("Account created successfully!");
+        location.href = "index.html";
+      }
+    </script>
+  </body>
+</html>

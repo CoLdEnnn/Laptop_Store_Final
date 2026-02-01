@@ -4,7 +4,6 @@ const { auth, isAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
-// list users (admin)
 router.get("/", auth, isAdmin, async (req, res, next) => {
   try {
     const users = await User.find().select("_id name email role createdAt");
@@ -14,7 +13,6 @@ router.get("/", auth, isAdmin, async (req, res, next) => {
   }
 });
 
-// set role (admin)
 router.patch("/:id/role", auth, isAdmin, async (req, res, next) => {
   try {
     const role = req.body?.role;

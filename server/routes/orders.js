@@ -16,7 +16,6 @@ router.post("/", auth, async (req, res, next) => {
       return res.status(400).json({ message: "items[] required" });
     }
 
-    // В этом проекте проще: делаем заказ из массива items
     const items = [];
     let total = 0;
 
@@ -31,7 +30,6 @@ router.post("/", auth, async (req, res, next) => {
       const laptop = await Laptop.findById(laptopId);
       if (!laptop) return res.status(404).json({ message: "Laptop not found" });
 
-      // уменьшаем stock (advanced update $inc)
       const updatedLaptop = await Laptop.findOneAndUpdate(
         { _id: laptopId, stock: { $gte: qty } },
         { $inc: { stock: -qty } },
@@ -73,7 +71,7 @@ router.get("/my", auth, async (req, res, next) => {
   }
 });
 
-// ALL ORDERS (admin)
+// ALL ORDERS
 router.get("/", auth, isAdmin, async (req, res, next) => {
   try {
     const orders = await Order.find().sort("-createdAt");
@@ -83,7 +81,6 @@ router.get("/", auth, isAdmin, async (req, res, next) => {
   }
 });
 
-// READ ONE (admin or owner)
 router.get("/:id", auth, async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -96,7 +93,6 @@ router.get("/:id", auth, async (req, res, next) => {
   }
 });
 
-// ADMIN: change status -> $set
 router.patch("/:id/status", auth, isAdmin, async (req, res, next) => {
   try {
     const { status } = req.body || {};
@@ -117,7 +113,6 @@ router.patch("/:id/status", auth, isAdmin, async (req, res, next) => {
   }
 });
 
-// ADVANCED UPDATE: $push item into order (only owner, only if created)
 router.post("/:id/items", auth, async (req, res, next) => {
   try {
     const { laptopId, qty } = req.body || {};
@@ -157,7 +152,6 @@ router.post("/:id/items", auth, async (req, res, next) => {
       { new: true }
     );
 
-    // пересчёт total
     updated.total = updated.items.reduce((s, it) => s + it.price * it.qty, 0);
     await updated.save();
 
@@ -167,7 +161,6 @@ router.post("/:id/items", auth, async (req, res, next) => {
   }
 });
 
-// ADVANCED DELETE: $pull item by itemId (only owner, only if created) + вернуть stock
 router.delete("/:id/items/:itemId", auth, async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id);
@@ -195,13 +188,11 @@ router.delete("/:id/items/:itemId", auth, async (req, res, next) => {
   }
 });
 
-// DELETE ORDER (admin) - optional
 router.delete("/:id", auth, isAdmin, async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id);
     if (!order) return res.status(404).json({ message: "Order not found" });
 
-    // если не shipped — вернем stock
     if (order.status !== "shipped") {
       for (const it of order.items) {
         await Laptop.findByIdAndUpdate(it.laptopId, { $inc: { stock: it.qty } });

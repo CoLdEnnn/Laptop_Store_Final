@@ -4,7 +4,6 @@ const { auth, isAdmin } = require("../middleware/auth");
 
 const router = express.Router();
 
-// READ ALL
 router.get("/", async (req, res, next) => {
   try {
     const laptops = await Laptop.find().sort("-createdAt");
@@ -14,7 +13,6 @@ router.get("/", async (req, res, next) => {
   }
 });
 
-// READ ONE
 router.get("/:id", async (req, res, next) => {
   try {
     const laptop = await Laptop.findById(req.params.id);
@@ -25,7 +23,6 @@ router.get("/:id", async (req, res, next) => {
   }
 });
 
-// CREATE (admin)
 router.post("/", auth, isAdmin, async (req, res, next) => {
   try {
     const { brand, model, price, stock, specs } = req.body || {};
@@ -45,7 +42,6 @@ router.post("/", auth, isAdmin, async (req, res, next) => {
   }
 });
 
-// UPDATE (admin) -> $set
 router.put("/:id", auth, isAdmin, async (req, res, next) => {
   try {
     const laptop = await Laptop.findByIdAndUpdate(
@@ -60,7 +56,6 @@ router.put("/:id", auth, isAdmin, async (req, res, next) => {
   }
 });
 
-// DELETE (admin)
 router.delete("/:id", auth, isAdmin, async (req, res, next) => {
   try {
     const deleted = await Laptop.findByIdAndDelete(req.params.id);
@@ -71,7 +66,6 @@ router.delete("/:id", auth, isAdmin, async (req, res, next) => {
   }
 });
 
-// ADVANCED UPDATE: $inc (purchase 1 item)
 router.post("/purchase/:id", auth, async (req, res, next) => {
   try {
     const updated = await Laptop.findOneAndUpdate(
@@ -88,7 +82,6 @@ router.post("/purchase/:id", auth, async (req, res, next) => {
   }
 });
 
-// ADVANCED UPDATE: $push review
 router.post("/:id/reviews", auth, async (req, res, next) => {
   try {
     const { rating, comment } = req.body || {};
@@ -119,7 +112,6 @@ router.post("/:id/reviews", auth, async (req, res, next) => {
   }
 });
 
-// ADVANCED DELETE: $pull review by reviewId
 router.delete("/:id/reviews/:reviewId", auth, async (req, res, next) => {
   try {
     const updated = await Laptop.findByIdAndUpdate(

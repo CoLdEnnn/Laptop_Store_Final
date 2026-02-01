@@ -21,7 +21,6 @@ const orderSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
-// индексы
 orderSchema.index({ userId: 1, createdAt: -1 });
 orderSchema.index({ status: 1, createdAt: -1 });
 

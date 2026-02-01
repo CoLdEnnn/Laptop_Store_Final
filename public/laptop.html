@@ -14,7 +14,9 @@
     <input id="rating" placeholder="Rating 1..5" />
     <input id="comment" placeholder="Comment" />
     <button onclick="addReview()">Add Review</button>
-
+    <nav>
+      <a href="laptops.html">Back</a>
+    </nav>
     <script>
       const token = localStorage.getItem("token");
       const id = new URLSearchParams(location.search).get("id");

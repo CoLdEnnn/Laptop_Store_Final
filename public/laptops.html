@@ -6,25 +6,34 @@
     <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
-    <h2>Laptops</h2>
+    <h2>Laptops Catalog</h2>
     <div id="list">Loading...</div>
-
+    <nav>
+      <a href="index.html">Back</a>
+    </nav>
     <script>
       fetch("/api/laptops")
         .then((res) => res.json())
         .then((data) => {
+          if (data.length === 0) {
+            document.getElementById("list").innerText = "No laptops available.";
+            return;
+          }
           document.getElementById("list").innerHTML = data
             .map(
               (l) => `
-              <div style="padding:8px;border:1px solid #ddd;margin:8px 0;">
-                <b>${l.brand} ${l.model}</b> - $${l.price} | stock: ${l.stock}
-                <a href="laptop.html?id=${l._id}">View</a>
+              <div class="card">
+                <b>${l.brand} ${l.model}</b>
+                <p>Price: $${l.price} | Stock: ${l.stock}</p>
+                <a href="laptop.html?id=${l._id}">View Details</a>
               </div>`,
             )
             .join("");
         })
         .catch(
-          () => (document.getElementById("list").innerText = "Error loading"),
+          () =>
+            (document.getElementById("list").innerText =
+              "Error loading catalog"),
         );
     </script>
   </body>
