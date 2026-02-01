@@ -1,5 +1,9 @@
 <!doctype html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Login</title>
+  </head>
   <body>
     <h2>Login</h2>
 
@@ -8,21 +12,54 @@
 
     <button onclick="login()">Login</button>
 
+    <hr />
+
+    <h3>Register</h3>
+    <input id="name" placeholder="Name" />
+    <input id="regEmail" placeholder="Email" />
+    <input id="regPass" type="password" placeholder="Password" />
+    <button onclick="register()">Register</button>
+
     <script>
-      function login() {
-        fetch("/api/auth/login", {
+      async function login() {
+        const res = await fetch("/api/auth/login", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             email: email.value,
             password: password.value,
           }),
-        })
-          .then((res) => res.json())
-          .then((data) => {
-            localStorage.setItem("token", data.token);
-            alert("Logged in");
-          });
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Login failed");
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.user.role);
+
+        alert("Logged in");
+        location.href = "index.html";
+      }
+
+      async function register() {
+        const res = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            name: name.value,
+            email: regEmail.value,
+            password: regPass.value,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Register failed");
+
+        localStorage.setItem("token", data.token);
+        localStorage.setItem("role", data.user.role);
+
+        alert("Registered + logged in");
+        location.href = "index.html";
       }
     </script>
   </body>

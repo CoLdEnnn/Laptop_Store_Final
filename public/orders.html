@@ -1,19 +1,33 @@
 <!doctype html>
 <html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Orders</title>
+  </head>
   <body>
     <h2>My Orders</h2>
-    <div id="orders"></div>
+    <div id="orders">Loading...</div>
 
     <script>
-      const userId = "PUT_USER_ID";
+      const token = localStorage.getItem("token");
+      if (!token) location.href = "login.html";
 
-      fetch(`/api/orders/user/${userId}`)
+      fetch("/api/orders/my", {
+        headers: { Authorization: "Bearer " + token },
+      })
         .then((res) => res.json())
         .then((data) => {
           document.getElementById("orders").innerHTML = data
-            .map((o) => `<p>${o.laptopId.brand} - ${o.status}</p>`)
+            .map(
+              (o) => `
+              <div style="padding:8px;border:1px solid #ddd;margin:8px 0;">
+                <b>${o._id}</b> | status: ${o.status} | total: $${o.total}
+                <div>${o.items.map((i) => `${i.brand} ${i.model} x${i.qty}`).join(", ")}</div>
+              </div>`,
+            )
             .join("");
-        });
+        })
+        .catch(() => (document.getElementById("orders").innerText = "Error"));
     </script>
   </body>
 </html>

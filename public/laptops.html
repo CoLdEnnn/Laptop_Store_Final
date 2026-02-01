@@ -1,11 +1,12 @@
 <!doctype html>
 <html>
   <head>
-    <title>Laptops - Catalog</title>
+    <meta charset="utf-8" />
+    <title>Catalog</title>
   </head>
   <body>
     <h2>Laptops</h2>
-    <div id="list"></div>
+    <div id="list">Loading...</div>
 
     <script>
       fetch("/api/laptops")
@@ -13,14 +14,17 @@
         .then((data) => {
           document.getElementById("list").innerHTML = data
             .map(
-              (l) =>
-                `<div>
-        <b>${l.brand} ${l.model}</b> - $${l.price}
-        <a href="laptop.html?id=${l._id}">View</a>
-      </div>`,
+              (l) => `
+              <div style="padding:8px;border:1px solid #ddd;margin:8px 0;">
+                <b>${l.brand} ${l.model}</b> - $${l.price} | stock: ${l.stock}
+                <a href="laptop.html?id=${l._id}">View</a>
+              </div>`,
             )
             .join("");
-        });
+        })
+        .catch(
+          () => (document.getElementById("list").innerText = "Error loading"),
+        );
     </script>
   </body>
 </html>
