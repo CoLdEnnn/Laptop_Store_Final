@@ -8,7 +8,6 @@ const router = express.Router();
 const canAccess = (req, order) =>
   req.user.role === "admin" || order.userId.toString() === req.user.id;
 
-// CREATE ORDER (user)  + $inc stock
 router.post("/", auth, async (req, res, next) => {
   try {
     const itemsReq = req.body?.items;
@@ -61,7 +60,6 @@ router.post("/", auth, async (req, res, next) => {
   }
 });
 
-// MY ORDERS
 router.get("/my", auth, async (req, res, next) => {
   try {
     const orders = await Order.find({ userId: req.user.id }).sort("-createdAt");
@@ -71,7 +69,6 @@ router.get("/my", auth, async (req, res, next) => {
   }
 });
 
-// ALL ORDERS
 router.get("/", auth, isAdmin, async (req, res, next) => {
   try {
     const orders = await Order.find().sort("-createdAt");
