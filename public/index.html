@@ -1,14 +1,33 @@
 <!doctype html>
 <html>
   <head>
+    <meta charset="utf-8" />
     <title>Laptop Store</title>
-    <link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
     <h1>Laptop Store</h1>
+
     <nav>
       <a href="laptops.html">Catalog</a>
+      <a href="orders.html">My Orders</a>
       <a href="login.html">Login</a>
+      <a id="adminLink" href="admin.html" style="display:none;">Admin</a>
+      <button id="logoutBtn" style="display:none;">Logout</button>
     </nav>
+
+    <script>
+      const role = localStorage.getItem("role");
+      const token = localStorage.getItem("token");
+
+      if (token) document.getElementById("logoutBtn").style.display = "inline-block";
+      if (role === "admin") document.getElementById("adminLink").style.display = "inline-block";
+
+      document.getElementById("logoutBtn").onclick = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("role");
+        alert("Logged out");
+        location.href = "index.html";
+      };
+    </script>
   </body>
 </html>

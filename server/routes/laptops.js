@@ -1,67 +1,139 @@
-const express = require('express');
-const router = express.Router();
-const Laptop = require('../models/Laptop');
-const { auth, isAdmin } = require('../middleware/auth');
+const express = require("express");
+const Laptop = require("../models/Laptop");
+const { auth, isAdmin } = require("../middleware/auth");
 
-// CREATE (admin)
-router.post('/', auth, isAdmin, async (req, res) => {
-  const laptop = await Laptop.create(req.body);
-  res.json(laptop);
-});
+const router = express.Router();
 
 // READ ALL
-router.get('/', async (req, res) => {
-  const laptops = await Laptop.find();
-  res.json(laptops);
+router.get("/", async (req, res, next) => {
+  try {
+    const laptops = await Laptop.find().sort("-createdAt");
+    res.json(laptops);
+  } catch (e) {
+    next(e);
+  }
 });
 
 // READ ONE
-router.get('/:id', async (req, res) => {
-  const laptop = await Laptop.findById(req.params.id);
-  res.json(laptop);
+router.get("/:id", async (req, res, next) => {
+  try {
+    const laptop = await Laptop.findById(req.params.id);
+    if (!laptop) return res.status(404).json({ message: "Laptop not found" });
+    res.json(laptop);
+  } catch (e) {
+    next(e);
+  }
 });
 
-// UPDATE (admin)
-router.put('/:id', auth, isAdmin, async (req, res) => {
-  const laptop = await Laptop.findByIdAndUpdate(
-    req.params.id,
-    { $set: req.body },
-    { new: true }
-  );
-  res.json(laptop);
+// CREATE (admin)
+router.post("/", auth, isAdmin, async (req, res, next) => {
+  try {
+    const { brand, model, price, stock, specs } = req.body || {};
+    if (!brand || !model || price === undefined) {
+      return res.status(400).json({ message: "brand, model, price required" });
+    }
+    const laptop = await Laptop.create({
+      brand,
+      model,
+      price: Number(price),
+      stock: stock === undefined ? 0 : Number(stock),
+      specs: specs || {}
+    });
+    res.status(201).json(laptop);
+  } catch (e) {
+    next(e);
+  }
+});
+
+// UPDATE (admin) -> $set
+router.put("/:id", auth, isAdmin, async (req, res, next) => {
+  try {
+    const laptop = await Laptop.findByIdAndUpdate(
+      req.params.id,
+      { $set: req.body },
+      { new: true, runValidators: true }
+    );
+    if (!laptop) return res.status(404).json({ message: "Laptop not found" });
+    res.json(laptop);
+  } catch (e) {
+    next(e);
+  }
 });
 
 // DELETE (admin)
-router.delete('/:id', auth, isAdmin, async (req, res) => {
-  await Laptop.findByIdAndDelete(req.params.id);
-  res.send("Laptop deleted");
+router.delete("/:id", auth, isAdmin, async (req, res, next) => {
+  try {
+    const deleted = await Laptop.findByIdAndDelete(req.params.id);
+    if (!deleted) return res.status(404).json({ message: "Laptop not found" });
+    res.json({ ok: true });
+  } catch (e) {
+    next(e);
+  }
 });
 
-// ADVANCED UPDATE: $inc
-router.post('/purchase/:id', async (req, res) => {
-  await Laptop.findByIdAndUpdate(
-    req.params.id,
-    { $inc: { stock: -1 } }
-  );
-  res.send("Purchase successful");
+// ADVANCED UPDATE: $inc (purchase 1 item)
+router.post("/purchase/:id", auth, async (req, res, next) => {
+  try {
+    const updated = await Laptop.findOneAndUpdate(
+      { _id: req.params.id, stock: { $gte: 1 } },
+      { $inc: { stock: -1 } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(400).json({ message: "Out of stock or not found" });
+
+    res.json({ ok: true, laptop: updated });
+  } catch (e) {
+    next(e);
+  }
 });
 
-// ADVANCED UPDATE: $push
-router.post('/:id/review', async (req, res) => {
-  await Laptop.findByIdAndUpdate(
-    req.params.id,
-    { $push: { reviews: req.body } }
-  );
-  res.send("Review added");
+// ADVANCED UPDATE: $push review
+router.post("/:id/reviews", auth, async (req, res, next) => {
+  try {
+    const { rating, comment } = req.body || {};
+    const r = Number(rating);
+    if (!Number.isFinite(r) || r < 1 || r > 5) {
+      return res.status(400).json({ message: "rating must be 1..5" });
+    }
+
+    const updated = await Laptop.findByIdAndUpdate(
+      req.params.id,
+      {
+        $push: {
+          reviews: {
+            userId: req.user.id,
+            rating: r,
+            comment: comment || ""
+          }
+        }
+      },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: "Laptop not found" });
+
+    res.json({ ok: true, laptop: updated });
+  } catch (e) {
+    next(e);
+  }
 });
 
-// ADVANCED DELETE: $pull
-router.delete('/:id/review', async (req, res) => {
-  await Laptop.findByIdAndUpdate(
-    req.params.id,
-    { $pull: { reviews: { user: req.body.user } } }
-  );
-  res.send("Review removed");
+// ADVANCED DELETE: $pull review by reviewId
+router.delete("/:id/reviews/:reviewId", auth, async (req, res, next) => {
+  try {
+    const updated = await Laptop.findByIdAndUpdate(
+      req.params.id,
+      { $pull: { reviews: { _id: req.params.reviewId } } },
+      { new: true }
+    );
+
+    if (!updated) return res.status(404).json({ message: "Laptop not found" });
+
+    res.json({ ok: true, laptop: updated });
+  } catch (e) {
+    next(e);
+  }
 });
 
 module.exports = router;

@@ -1,34 +1,116 @@
 <!doctype html>
 <html>
+  <head><meta charset="utf-8" /><title>Admin</title></head>
   <body>
     <h2>Admin Panel</h2>
 
+    <p><a href="index.html">← Home</a></p>
+
+    <h3>Add Laptop</h3>
     <input id="brand" placeholder="Brand" />
     <input id="model" placeholder="Model" />
     <input id="price" placeholder="Price" />
+    <input id="stock" placeholder="Stock" />
+    <button onclick="addLaptop()">Add</button>
 
-    <button onclick="add()">Add Laptop</button>
+    <h3>Laptops</h3>
+    <div id="laptops">Loading...</div>
+
+    <h3>Orders (admin)</h3>
+    <div id="orders">Loading...</div>
 
     <script>
-      function add() {
-        fetch("/api/laptops", {
+      const token = localStorage.getItem("token");
+      const role = localStorage.getItem("role");
+      if (!token || role !== "admin") {
+        alert("Admin only");
+        location.href = "index.html";
+      }
+
+      function authHeaders() {
+        return { Authorization: "Bearer " + token };
+      }
+
+      async function addLaptop() {
+        const res = await fetch("/api/laptops", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...authHeaders() },
           body: JSON.stringify({
             brand: brand.value,
             model: model.value,
-            price: price.value,
-          }),
-        }).then(() => alert("Added"));
+            price: Number(price.value),
+            stock: Number(stock.value || 0)
+          })
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Add failed");
+        alert("Added");
+        loadLaptops();
       }
-      fetch("/api/laptops", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: "Bearer " + localStorage.getItem("token"),
-        },
-        body: JSON.stringify(data),
-      });
+
+      async function delLaptop(id) {
+        if (!confirm("Delete laptop?")) return;
+        const res = await fetch("/api/laptops/" + id, {
+          method: "DELETE",
+          headers: authHeaders()
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Delete failed");
+        loadLaptops();
+      }
+
+      async function loadLaptops() {
+        const res = await fetch("/api/laptops");
+        const data = await res.json();
+        document.getElementById("laptops").innerHTML = data
+          .map(
+            (l) => `
+            <div style="padding:8px;border:1px solid #ddd;margin:8px 0;">
+              <b>${l.brand} ${l.model}</b> - $${l.price} | stock: ${l.stock}
+              <button onclick="delLaptop('${l._id}')">Delete</button>
+            </div>`
+          )
+          .join("");
+      }
+
+      async function loadOrders() {
+        const res = await fetch("/api/orders", { headers: authHeaders() });
+        const data = await res.json();
+        if (!res.ok) return (document.getElementById("orders").innerText = data.message || "Error");
+
+        document.getElementById("orders").innerHTML = data
+          .map(
+            (o) => `
+            <div style="padding:8px;border:1px solid #ddd;margin:8px 0;">
+              <b>${o._id}</b> | status: ${o.status} | total: $${o.total}
+              <div>${o.items.map(i => `${i.brand} ${i.model} x${i.qty}`).join(", ")}</div>
+              <select onchange="setStatus('${o._id}', this.value)">
+                <option value="">Change status</option>
+                <option value="created">created</option>
+                <option value="paid">paid</option>
+                <option value="shipped">shipped</option>
+                <option value="cancelled">cancelled</option>
+              </select>
+            </div>`
+          )
+          .join("");
+      }
+
+      async function setStatus(id, status) {
+        if (!status) return;
+        const res = await fetch("/api/orders/" + id + "/status", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({ status })
+        });
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Status update failed");
+        loadOrders();
+      }
+
+      loadLaptops();
+      loadOrders();
     </script>
   </body>
 </html>

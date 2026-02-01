@@ -1,27 +1,70 @@
 <!doctype html>
 <html>
+  <head><meta charset="utf-8" /><title>Laptop</title></head>
   <body>
-    <div id="laptop"></div>
-    <button onclick="buy()">Buy</button>
+    <div id="laptop">Loading...</div>
+
+    <button onclick="buy()">Buy (creates order)</button>
+
+    <h3>Add review (1..5)</h3>
+    <input id="rating" placeholder="Rating 1..5" />
+    <input id="comment" placeholder="Comment" />
+    <button onclick="addReview()">Add Review</button>
 
     <script>
+      const token = localStorage.getItem("token");
       const id = new URLSearchParams(location.search).get("id");
 
-      fetch(`/api/laptops/${id}`)
-        .then((res) => res.json())
-        .then((l) => {
-          document.getElementById("laptop").innerHTML = `
-      <h2>${l.brand} ${l.model}</h2>
-      <p>Price: $${l.price}</p>
-      <p>Stock: ${l.stock}</p>
-    `;
+      function authHeaders() {
+        return token ? { Authorization: "Bearer " + token } : {};
+      }
+
+      async function load() {
+        const res = await fetch(`/api/laptops/${id}`);
+        const l = await res.json();
+
+        document.getElementById("laptop").innerHTML = `
+          <h2>${l.brand} ${l.model}</h2>
+          <p>Price: $${l.price}</p>
+          <p>Stock: ${l.stock}</p>
+          <p>Reviews: ${l.reviews?.length || 0}</p>
+        `;
+      }
+
+      async function buy() {
+        if (!token) return alert("Login first");
+
+        // создаём заказ через /api/orders (и он сам сделает $inc stock)
+        const res = await fetch("/api/orders", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({ items: [{ laptopId: id, qty: 1 }] })
         });
 
-      function buy() {
-        fetch(`/api/laptops/purchase/${id}`, { method: "POST" }).then(() =>
-          alert("Purchased"),
-        );
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Buy failed");
+
+        alert("Order created: " + data._id);
+        load();
       }
+
+      async function addReview() {
+        if (!token) return alert("Login first");
+
+        const res = await fetch(`/api/laptops/${id}/reviews`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json", ...authHeaders() },
+          body: JSON.stringify({ rating: rating.value, comment: comment.value })
+        });
+
+        const data = await res.json();
+        if (!res.ok) return alert(data.message || "Review failed");
+
+        alert("Review added");
+        load();
+      }
+
+      load();
     </script>
   </body>
 </html>
