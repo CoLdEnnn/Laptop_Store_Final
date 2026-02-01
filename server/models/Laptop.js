@@ -27,4 +27,4 @@ const laptopSchema = new mongoose.Schema(
 // compound index
 laptopSchema.index({ brand: 1, price: -1 });
 
-module.exports = mongoose.model("Laptop", laptopSchema);
+module.exports = mongoose.model("Laptop", laptopSchema, "Laptops");
