@@ -1,6 +1,10 @@
 <!doctype html>
 <html>
-  <head><meta charset="utf-8" /><title>Admin</title></head>
+  <head>
+    <meta charset="utf-8" />
+    <title>Admin</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
   <body>
     <h2>Admin Panel</h2>
 
@@ -39,8 +43,8 @@
             brand: brand.value,
             model: model.value,
             price: Number(price.value),
-            stock: Number(stock.value || 0)
-          })
+            stock: Number(stock.value || 0),
+          }),
         });
 
         const data = await res.json();
@@ -53,7 +57,7 @@
         if (!confirm("Delete laptop?")) return;
         const res = await fetch("/api/laptops/" + id, {
           method: "DELETE",
-          headers: authHeaders()
+          headers: authHeaders(),
         });
         const data = await res.json();
         if (!res.ok) return alert(data.message || "Delete failed");
@@ -69,7 +73,7 @@
             <div style="padding:8px;border:1px solid #ddd;margin:8px 0;">
               <b>${l.brand} ${l.model}</b> - $${l.price} | stock: ${l.stock}
               <button onclick="delLaptop('${l._id}')">Delete</button>
-            </div>`
+            </div>`,
           )
           .join("");
       }
@@ -77,14 +81,16 @@
       async function loadOrders() {
         const res = await fetch("/api/orders", { headers: authHeaders() });
         const data = await res.json();
-        if (!res.ok) return (document.getElementById("orders").innerText = data.message || "Error");
+        if (!res.ok)
+          return (document.getElementById("orders").innerText =
+            data.message || "Error");
 
         document.getElementById("orders").innerHTML = data
           .map(
             (o) => `
             <div style="padding:8px;border:1px solid #ddd;margin:8px 0;">
               <b>${o._id}</b> | status: ${o.status} | total: $${o.total}
-              <div>${o.items.map(i => `${i.brand} ${i.model} x${i.qty}`).join(", ")}</div>
+              <div>${o.items.map((i) => `${i.brand} ${i.model} x${i.qty}`).join(", ")}</div>
               <select onchange="setStatus('${o._id}', this.value)">
                 <option value="">Change status</option>
                 <option value="created">created</option>
@@ -92,7 +98,7 @@
                 <option value="shipped">shipped</option>
                 <option value="cancelled">cancelled</option>
               </select>
-            </div>`
+            </div>`,
           )
           .join("");
       }
@@ -102,7 +108,7 @@
         const res = await fetch("/api/orders/" + id + "/status", {
           method: "PATCH",
           headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify({ status })
+          body: JSON.stringify({ status }),
         });
         const data = await res.json();
         if (!res.ok) return alert(data.message || "Status update failed");

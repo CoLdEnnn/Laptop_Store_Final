@@ -1,6 +1,10 @@
 <!doctype html>
 <html>
-  <head><meta charset="utf-8" /><title>Laptop</title></head>
+  <head>
+    <meta charset="utf-8" />
+    <title>Laptop</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
   <body>
     <div id="laptop">Loading...</div>
 
@@ -34,11 +38,10 @@
       async function buy() {
         if (!token) return alert("Login first");
 
-        // создаём заказ через /api/orders (и он сам сделает $inc stock)
         const res = await fetch("/api/orders", {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify({ items: [{ laptopId: id, qty: 1 }] })
+          body: JSON.stringify({ items: [{ laptopId: id, qty: 1 }] }),
         });
 
         const data = await res.json();
@@ -54,7 +57,10 @@
         const res = await fetch(`/api/laptops/${id}/reviews`, {
           method: "POST",
           headers: { "Content-Type": "application/json", ...authHeaders() },
-          body: JSON.stringify({ rating: rating.value, comment: comment.value })
+          body: JSON.stringify({
+            rating: rating.value,
+            comment: comment.value,
+          }),
         });
 
         const data = await res.json();

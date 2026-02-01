@@ -7,7 +7,7 @@ const connectDB = async () => {
   mongoose.set("strictQuery", true);
 
   await mongoose.connect(uri);
-  console.log("✅ MongoDB connected:", mongoose.connection.name);
+  console.log("MongoDB connected:", mongoose.connection.name);
 };
 
 module.exports = connectDB;
