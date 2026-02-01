@@ -14,7 +14,6 @@ const laptopSchema = new mongoose.Schema(
 
     reviews: [
       {
-        _id: true,
         userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
         rating: { type: Number, min: 1, max: 5, required: true },
         comment: { type: String, default: "" },
@@ -25,6 +24,7 @@ const laptopSchema = new mongoose.Schema(
   { timestamps: true, versionKey: false }
 );
 
+// compound index
 laptopSchema.index({ brand: 1, price: -1 });
 
 module.exports = mongoose.model("Laptop", laptopSchema);
