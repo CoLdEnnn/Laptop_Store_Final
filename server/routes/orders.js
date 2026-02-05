@@ -158,6 +158,28 @@ router.post("/:id/items", auth, async (req, res, next) => {
   }
 });
 
+router.patch("/:id/cancel", auth, async (req, res, next) => {
+  try {
+    const order = await Order.findOne({ _id: req.params.id, userId: req.user.id });
+    
+    if (!order) return res.status(404).json({ message: "Order not found" });
+    if (order.status === "cancelled") return res.status(400).json({ message: "Already cancelled" });
+
+    order.status = "cancelled";
+    await order.save();
+
+    for (const item of order.items) {
+      await Laptop.findByIdAndUpdate(item.laptopId, {
+        $inc: { stock: item.qty } 
+      });
+    }
+
+    res.json({ message: "Order cancelled, stock restored", order });
+  } catch (e) {
+    next(e);
+  }
+});
+
 router.delete("/:id/items/:itemId", auth, async (req, res, next) => {
   try {
     const order = await Order.findById(req.params.id);

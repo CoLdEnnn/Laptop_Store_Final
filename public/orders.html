@@ -15,19 +15,48 @@
       const token = localStorage.getItem("token");
       if (!token) location.href = "login.html";
 
+      async function cancelOrder(orderId) {
+        if (!confirm("Are you sure you want to cancel?")) return;
+        try {
+          const res = await fetch(`/api/orders/${orderId}/cancel`, {
+            method: "PATCH",
+            headers: {
+              Authorization: "Bearer " + localStorage.getItem("token"),
+            },
+          });
+
+          if (res.ok) {
+            alert("Cancelled! Stock restored.");
+            location.reload();
+          } else {
+            const err = await res.json();
+            alert("Error: " + err.message);
+          }
+        } catch (e) {
+          console.error("Cancel failed", e);
+        }
+      }
       fetch("/api/orders/my", {
         headers: { Authorization: "Bearer " + token },
       })
         .then((res) => res.json())
         .then((data) => {
           document.getElementById("orders").innerHTML = data
-            .map(
-              (o) => `
-              <div style="padding:8px;border:1px solid #ddd;margin:8px 0;">
-                <b>${o._id}</b> | status: ${o.status} | total: $${o.total}
-                <div>${o.items.map((i) => `${i.brand} ${i.model} x${i.qty}`).join(", ")}</div>
-              </div>`,
-            )
+            .map((o) => {
+              const cancelBtn =
+                o.status !== "cancelled"
+                  ? `<button onclick="cancelOrder('${o._id}')" style="margin-top:10px; background:#ff4d4d; color:white; border:none; border-radius:4px; cursor:pointer; padding:5px 10px;">Cancel Order</button>`
+                  : '<span style="color:red; font-weight:bold; margin-top:10px; display:block;">Cancelled</span>';
+
+              return `
+        <div style="padding:15px; border:1px solid #ddd; margin:10px 0; border-radius:8px; background:#f9f9f9;">
+          <b>${o._id}</b> | status: <span style="font-style:italic;">${o.status}</span> | total: $${o.total}
+          <div style="margin-top:5px; color:#555;">
+            ${o.items.map((i) => `${i.brand} ${i.model} x${i.qty}`).join(", ")}
+          </div>
+          ${cancelBtn} 
+        </div>`;
+            })
             .join("");
         })
         .catch(() => (document.getElementById("orders").innerText = "Error"));
